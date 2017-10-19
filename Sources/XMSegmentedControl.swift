@@ -41,21 +41,23 @@ public enum XMIconRenderingType {
 /**
  Content Type for the segmented control.
  - Text: The segmented control displays only text.
+ - AttributedText: The segmented control displays only attributed text.
  - Icon: The segmented control displays only icons/images.
  - Hybrid: The segmented control displays icons and text.
  - HybridVertical: The segmented control displays icons and text in vertical arrangement.
- */
+*/
 public enum XMContentType {
-    case text
-    case icon
-    case hybrid
-    case hybridVertical
+	case text
+	case attributedText
+	case icon
+	case hybrid
+	case hybridVertical
 }
 
 /**
- Content distribution for the segmented control
- - Fixed: The segmented control item has a fixed width at `totalWidth / 6`, where 6 is maximum number of segment items.
- - HalfFixed: The segmented control item has a width equal to `totalWidth / 6`, if number of segment items > 2, and `totalWidth / 4` otherwise.
+Content distribution for the segmented control
+- Fixed: The segmented control item has a fixed width at `totalWidth / 6`, where 6 is maximum number of segment items.
+- HalfFixed: The segmented control item has a width equal to `totalWidth / 6`, if number of segment items > 2, and `totalWidth / 4` otherwise.
  - Flexible: The segmented control item has a width equal to `totalWidth / segmentCount`
  */
 public enum XMSegmentItemWidthDistribution {
@@ -108,6 +110,19 @@ open class XMSegmentedControl: UIView {
             self.update()
         }
     }
+	
+	/**
+	Sets the segmented control content type to `attributedText` and uses the content of the array to create the segments.
+	- Note: Only six elements will be displayed.
+	*/
+	open var segmentAttributedTitles: [NSAttributedString] = []{
+		didSet {
+			segmentAttributedTitles = segmentAttributedTitles.count > 6 ? Array(segmentAttributedTitles[0..<6]) : segmentAttributedTitles
+			contentType = .attributedText
+			self.update()
+		}
+	}
+
     
     /**
      Sets the segmented control content type to `Icon` and uses the content of the array to create the segments.
@@ -227,6 +242,16 @@ open class XMSegmentedControl: UIView {
                             $0.setTitleColor(self.tint, for: UIControlState())
                         }
                     }
+				case .attributedText:
+					((self.subviews.filter(isUIButton)) as! [UIButton]).forEach {
+						
+						// Set the attributes of the title for the full string
+						$0.isSelected = $0.tag == self.selectedSegment
+
+						if $0.tag == self.selectedSegment {
+							self.highlightView.frame.origin.x = $0.frame.origin.x
+						}
+					}
                 }
 
                 }, completion:nil)
@@ -258,6 +283,13 @@ open class XMSegmentedControl: UIView {
 
         self.commonInit(segmentTitle, highlightStyle: selectedItemHighlightStyle)
     }
+	
+	/// Initializes and returns a newly allocated XMSegmentedControl object with the specified frame rectangle. It sets the segments of the control from the given `segmentAttributedTitles` array and the highlight style for the selected item.
+	public init (frame: CGRect, segmentAttributedTitles: [NSAttributedString], selectedItemHighlightStyle: XMSelectedItemHighlightStyle) {
+		super.init (frame: frame)
+		
+		self.commonInit(segmentAttributedTitles, highlightStyle: selectedItemHighlightStyle)
+	}
     
     /// Initializes and returns a newly allocated XMSegmentedControl object with the specified frame rectangle. It sets the segments of the control from the given `segmentIcon` array and the highlight style for the selected item.
     public init (frame: CGRect, segmentIcon: [UIImage], selectedItemHighlightStyle: XMSelectedItemHighlightStyle) {
@@ -287,6 +319,8 @@ open class XMSegmentedControl: UIView {
     fileprivate func commonInit(_ data: Any, highlightStyle: XMSelectedItemHighlightStyle) {
         if let segmentTitle = data as? [String] {
             self.segmentTitle = segmentTitle
+		} else if let segmentAttributedTitles = data as? [NSAttributedString] {
+			self.segmentAttributedTitles = segmentAttributedTitles
         } else if let segmentIcon = data as? [UIImage] {
             self.segmentIcon = segmentIcon
         } else if let segmentContent = data as? ([String], [UIImage]) {
@@ -324,7 +358,7 @@ open class XMSegmentedControl: UIView {
         func addSegments(startingPosition starting: CGFloat, sections: Int, width: CGFloat, height: CGFloat) {
             for i in 0..<sections {
                 let frame = CGRect(x: starting + (CGFloat(i) * width), y: 0, width: width, height: height)
-                let buttonType: UIButtonType = iconRenderingType == .custom ? .custom : .system
+                let buttonType: UIButtonType = iconRenderingType == .custom ? .custom : .custom
                 let tab = UIButton(type: buttonType)
                 tab.frame = frame
 
@@ -344,6 +378,25 @@ open class XMSegmentedControl: UIView {
                     tab.setTitle(segmentTitle[i], for: UIControlState())
                     tab.setTitleColor(i == selectedSegment ? highlightTint : tint, for: UIControlState())
                     tab.titleLabel?.font = font
+					
+				case .attributedText:
+					let segmentAttributedTitle = segmentAttributedTitles[i]
+					let string = segmentAttributedTitle.string
+					let fullRange = (string as NSString).range(of: string)
+					
+					// Create an attributed string copy for the normal state and set foreground color for text
+					let normalAttributedString = NSMutableAttributedString(attributedString: segmentAttributedTitle)
+					normalAttributedString.addAttribute(NSAttributedStringKey.foregroundColor, value: tint, range: fullRange)
+					tab.setAttributedTitle(normalAttributedString, for: .normal)
+
+					// Create an attributed string copy for the selected state and set foreground color for text
+					let selectedAttributedString = NSMutableAttributedString(attributedString: segmentAttributedTitle)
+					selectedAttributedString.addAttribute(NSAttributedStringKey.foregroundColor, value: highlightTint, range: fullRange)
+					tab.setAttributedTitle(selectedAttributedString, for: .selected)
+					
+					// Set the attributes of the title for the full string
+					tab.isSelected = i == self.selectedSegment
+
                 case .hybrid:
                     recalculateEdgeInsets(of: tab)
 
@@ -432,32 +485,48 @@ open class XMSegmentedControl: UIView {
             }
         }
 
-        if contentType == .text {
-            guard segmentTitle.count > 0 else {
-                print("segment titles (segmentTitle) are not set")
-                return
-            }
-
-            let tabBarSections = segmentTitle.count
-            let sectionWidth = totalWidth / CGFloat(tabBarSections)
-            addHighlightView(startingPosition: CGFloat(selectedSegment) * sectionWidth, width: sectionWidth)
-            addSegments(startingPosition: 0, sections: tabBarSections, width: sectionWidth, height: frame.height)
-        } else if contentType == .icon {
-            let tabBarSections:Int = segmentIcon.count
-            let positionWidth = startingPositionAndWidth(totalWidth, distribution: itemWidthDistribution, segmentCount: tabBarSections)
-            addHighlightView(startingPosition: CGFloat(selectedSegment) * positionWidth.sectionWidth, width: positionWidth.sectionWidth)
+		switch contentType {
+		case .text, .attributedText:
+			var titles = [Any]()
+			
+			switch contentType {
+			case .text:
+				titles = segmentTitle
+				
+			case .attributedText:
+				titles = segmentAttributedTitles
+				
+			default: break
+			}
+			
+			guard titles.count > 0 else {
+				print("segment titles (segmentTitle or segmentAttributedTitles) are not set")
+				return
+			}
+			
+			let tabBarSections = titles.count
+			let sectionWidth = totalWidth / CGFloat(tabBarSections)
+			addHighlightView(startingPosition: CGFloat(selectedSegment) * sectionWidth, width: sectionWidth)
+			addSegments(startingPosition: 0, sections: tabBarSections, width: sectionWidth, height: frame.height)
+			
+		case .icon:
+			let tabBarSections:Int = segmentIcon.count
+			let positionWidth = startingPositionAndWidth(totalWidth, distribution: itemWidthDistribution, segmentCount: tabBarSections)
+			addHighlightView(startingPosition: CGFloat(selectedSegment) * positionWidth.sectionWidth, width: positionWidth.sectionWidth)
             addSegments(startingPosition: positionWidth.startingPosition, sections: tabBarSections, width: positionWidth.sectionWidth, height: self.frame.height)
-        } else if contentType == .hybrid {
+			
+		case .hybrid:
             let tabBarSections:Int = segmentContent.text.count
             let positionWidth = startingPositionAndWidth(totalWidth, distribution: itemWidthDistribution, segmentCount: tabBarSections)
             addHighlightView(startingPosition: CGFloat(selectedSegment) * positionWidth.sectionWidth, width: positionWidth.sectionWidth)
             addSegments(startingPosition: 0, sections: tabBarSections, width: positionWidth.sectionWidth, height: self.frame.height)
-        } else if contentType == .hybridVertical {
-            let tabBarSections:Int = segmentContent.text.count
-            let positionWidth = startingPositionAndWidth(totalWidth, distribution: itemWidthDistribution, segmentCount: tabBarSections)
-            addHighlightView(startingPosition: CGFloat(selectedSegment) * positionWidth.sectionWidth, width: positionWidth.sectionWidth)
-            addSegments(startingPosition: positionWidth.startingPosition, sections: tabBarSections, width: positionWidth.sectionWidth, height: self.frame.height)
-        }
+			
+		case .hybridVertical:
+			let tabBarSections:Int = segmentContent.text.count
+			let positionWidth = startingPositionAndWidth(totalWidth, distribution: itemWidthDistribution, segmentCount: tabBarSections)
+			addHighlightView(startingPosition: CGFloat(selectedSegment) * positionWidth.sectionWidth, width: positionWidth.sectionWidth)
+			addSegments(startingPosition: positionWidth.startingPosition, sections: tabBarSections, width: positionWidth.sectionWidth, height: self.frame.height)
+		}
     }
     
     /// Called whenever a segment is pressed. Sends the information to the delegate.
