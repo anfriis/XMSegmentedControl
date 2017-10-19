@@ -97,9 +97,9 @@
 		9AC4ED251F87DC82003C7F4D /* XMSegmentedControlDemo */ = {
 			isa = PBXGroup;
 			children = (
-				9AC4ED261F87DC82003C7F4D /* AppDelegate.swift */,
 				9AC4ED281F87DC82003C7F4D /* ViewController.swift */,
 				9AC4ED2A1F87DC82003C7F4D /* Main.storyboard */,
+				9AC4ED261F87DC82003C7F4D /* AppDelegate.swift */,
 				9AC4ED2D1F87DC82003C7F4D /* Assets.xcassets */,
 				9AC4ED2F1F87DC82003C7F4D /* LaunchScreen.storyboard */,
 				9AC4ED321F87DC82003C7F4D /* Info.plist */,
@@ -398,7 +398,7 @@
 				DEVELOPMENT_TEAM = CV6YN9D76V;
 				INFOPLIST_FILE = XMSegmentedControl/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.cromian.XMSegmentedControl;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cromian.XMSegmentedControlDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -414,7 +414,7 @@
 				DEVELOPMENT_TEAM = CV6YN9D76V;
 				INFOPLIST_FILE = XMSegmentedControl/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.cromian.XMSegmentedControl;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cromian.XMSegmentedControlDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
