@@ -13,6 +13,7 @@ class ViewController: UIViewController {
 
 	@IBOutlet weak var containerView: UIView!
 	
+	// Segmented control with highlight color and
 	lazy var segmentedControl: XMSegmentedControl = {
 		let unselectedCol = UIColor.gray
 		let selectedCol = UIColor.red
@@ -36,6 +37,32 @@ class ViewController: UIViewController {
 		seg.translatesAutoresizingMaskIntoConstraints = false
 		return seg
 	}()
+	
+	// Segmented Control with rounded corners
+	lazy var segmentedControl2: XMSegmentedControl = {
+		let unselectedCol = UIColor.gray
+		let selectedCol = UIColor.red
+		
+		let strings = ["FIRST", "SECOND"]
+		
+		let attributedTitles = strings.map({
+			return NSAttributedString(string: $0, attributes: [
+				NSAttributedStringKey.font: UIFont.boldSystemFont(ofSize: 14),
+				NSAttributedStringKey.kern: 1.4
+				])
+		})
+		
+		let seg = XMSegmentedControl(frame: CGRect.zero, segmentAttributedTitles: attributedTitles, selectedItemHighlightStyle: XMSelectedItemHighlightStyle.background)
+		
+		seg.backgroundColor = .white
+		seg.cornerRadius = 4
+		seg.tint = unselectedCol
+		seg.highlightColor = UIColor.white
+		seg.highlightTint = selectedCol
+		return seg
+	}()
+	
+
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -52,9 +79,22 @@ class ViewController: UIViewController {
 			self.view.layoutIfNeeded()
 			
 			containerView.addSubview(segmentedControl)
+			
+			self.view.addSubview(segmentedControl2)
+			
+			segmentedControl2.translatesAutoresizingMaskIntoConstraints = false
+			
+			NSLayoutConstraint.activate([
+				segmentedControl2.topAnchor.constraint(equalTo: containerView.bottomAnchor, constant: 30),
+				segmentedControl2.leftAnchor.constraint(equalTo: self.view.leftAnchor, constant: 20),
+				segmentedControl2.rightAnchor.constraint(equalTo: self.view.rightAnchor, constant: -20),
+				segmentedControl2.heightAnchor.constraint(equalToConstant: 50.0)
+				])
+		
+			segmentedControl2.update()
 		}
 	}
 	
-
+	
 }
 

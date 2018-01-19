@@ -98,6 +98,14 @@ open class XMSegmentedControl: UIView {
             self.update()
         }
     }
+	
+	// Changes the corner radius of the whole segmented control view
+	@IBInspectable open var cornerRadius = CGFloat(0) {
+		didSet {
+			layer.cornerRadius = cornerRadius
+			clipsToBounds = cornerRadius > 0.0
+		}
+	}
     
     /**
      Sets the segmented control content type to `Text` and uses the content of the array to create the segments.
